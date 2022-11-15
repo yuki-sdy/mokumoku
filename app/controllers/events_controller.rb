@@ -29,14 +29,18 @@ class EventsController < ApplicationController
 
   def create
     @event = current_user.events.build(event_params)
-    if @event.save
-      User.all.find_each do |user|
-        NotificationFacade.created_event(@event, user)
-      end
-
-      redirect_to event_path(@event)
-    else
+    if @event.only_woman && !current_user.woman?
       render :new
+    else
+      if @event.save
+        User.all.find_each do |user|
+          NotificationFacade.created_event(@event, user)
+        end
+
+        redirect_to event_path(@event)
+      else
+        render :new
+      end
     end
   end
 
@@ -60,6 +64,6 @@ class EventsController < ApplicationController
   private
 
   def event_params
-    params.require(:event).permit(:title, :content, :held_at, :prefecture_id, :thumbnail)
+    params.require(:event).permit(:title, :content, :held_at, :prefecture_id, :thumbnail, :only_woman)
   end
 end
